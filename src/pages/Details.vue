@@ -168,10 +168,6 @@
                                 range
                                 :placeholder="new Date()"
                                 :enable-time-picker="true"
-                                :auto-apply="false"
-                                :min-date="new Date(2020, 0, 1)"
-                                :max-date="new Date()"
-                                :default-date="new Date()"
                                 :required="true"
                             />
                         </p>
@@ -693,29 +689,8 @@ export default {
                         this.selectedRangeUptime = null;
                     }
                 });
-            } else if (this.selectedDateRange && this.selectedDateRange[0]) {
-                const endOfDay = new Date(this.selectedDateRange[0]);
-                endOfDay.setUTCHours(23, 59, 59, 999);
-                this.$root.getSocket().emit("getUptimeForRange", this.monitor.id, this.selectedDateRange[0], endOfDay.toISOString(), (res) => {
-                    if (res.ok) {
-                        this.selectedRangeUptime = res.uptime;
-                    } else {
-                        this.selectedRangeUptime = null;
-                    }
-                });
             } else {
-                // Default to today in UTC
-                const today = new Date();
-                const start = new Date(Date.UTC(today.getUTCFullYear(), today.getUTCMonth(), today.getUTCDate(), 0, 0, 0, 0)).toISOString();
-                const end = new Date(Date.UTC(today.getUTCFullYear(), today.getUTCMonth(), today.getUTCDate(), 23, 59, 59, 999)).toISOString();
-
-                this.$root.getSocket().emit("getUptimeForRange", this.monitor.id, start, end, (res) => {
-                    if (res.ok) {
-                        this.selectedRangeUptime = res.uptime;
-                    } else {
-                        this.selectedRangeUptime = null;
-                    }
-                });
+                this.selectedRangeUptime = null;
             }
         }
     },
