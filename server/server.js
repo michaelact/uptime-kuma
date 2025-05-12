@@ -1297,6 +1297,40 @@ let needSetup = false;
             }
         });
 
+        socket.on("getUptimeForRange", async (monitorID, startDate, endDate, callback) => {
+            try {
+                checkLogin(socket);
+
+                // Query heartbeats within the date range
+                console.log("Querying heartbeats for range:", startDate, endDate);
+                let heartbeats = await R.find("heartbeat", "monitor_id = ? AND time >= ? AND time <= ?", [
+                    monitorID,
+                    startDate,
+                    endDate
+                ]);
+
+                let totalHeartbeats = heartbeats.length;
+                let upHeartbeats = heartbeats.filter(beat => beat.status === 1).length;
+
+                let uptimePercentage = 0;
+                if (totalHeartbeats > 0) {
+                    uptimePercentage = (upHeartbeats / totalHeartbeats) * 100;
+                }
+
+                console.log("Checking uptime for range:", uptimePercentage);
+                callback({
+                    ok: true,
+                    uptime: uptimePercentage.toFixed(2)
+                });
+            } catch (e) {
+                console.log("Error checking uptime for range:", e);
+                callback({
+                    ok: false,
+                    msg: e.message,
+                });
+            }
+        });
+
         socket.on("changePassword", async (password, callback) => {
             try {
                 checkLogin(socket);

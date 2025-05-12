@@ -159,6 +159,17 @@
                         </span>
                     </div>
 
+                    <!-- Uptime (Custom Range) -->
+                    <div class="col-12 col-sm col row d-flex align-items-center d-sm-block">
+                        <h4 class="col-4 col-sm-12">{{ $t("Uptime") }}</h4>
+                        <p class="col-4 col-sm-12 mb-0 mb-sm-2">
+                            <VueDatePicker v-model="selectedDateRange" range :placeholder="$t('Select date range')" />
+                        </p>
+                        <span class="col-4 col-sm-12 num">
+                             {{ selectedRangeUptime !== null ? selectedRangeUptime + '%' : 'N/A' }}
+                        </span>
+                    </div>
+
                     <div v-if="tlsInfo" class="col-12 col-sm col row d-flex align-items-center d-sm-block">
                         <h4 class="col-4 col-sm-12">{{ $t("Cert Exp.") }}</h4>
                         <p class="col-4 col-sm-12 mb-0 mb-sm-2">(<Datetime :value="tlsInfo.certInfo.validTo" date-only />)</p>
@@ -293,6 +304,8 @@ import "prismjs/components/prism-css";
 import { PrismEditor } from "vue-prism-editor";
 import "vue-prism-editor/dist/prismeditor.min.css";
 import ScreenshotDialog from "../components/ScreenshotDialog.vue";
+import VueDatePicker from '@vuepic/vue-datepicker';
+import '@vuepic/vue-datepicker/dist/main.css'
 
 export default {
     components: {
@@ -307,7 +320,8 @@ export default {
         Tag,
         CertificateInfo,
         PrismEditor,
-        ScreenshotDialog
+        ScreenshotDialog,
+        VueDatePicker
     },
     data() {
         return {
@@ -328,6 +342,8 @@ export default {
                 currentExample: "javascript-fetch",
                 code: "",
             },
+            selectedDateRange: null,
+            selectedRangeUptime: null
         };
     },
     computed: {
@@ -406,7 +422,6 @@ export default {
         page(to) {
             this.getImportantHeartbeatListPaged();
         },
-
         monitor(to) {
             this.getImportantHeartbeatListLength();
         },
@@ -418,13 +433,15 @@ export default {
         "pushMonitor.currentExample"() {
             this.loadPushExample();
         },
+        selectedDateRange() {
+            this.getImportantHeartbeatListLength();
+            this.getUptimeForRange();
+        }
     },
-
     mounted() {
         this.getImportantHeartbeatListLength();
-
+        this.getUptimeForRange();
         this.$root.emitter.on("newImportantHeartbeat", this.onNewImportantHeartbeat);
-
         if (this.monitor && this.monitor.type === "push") {
             if (this.lastHeartBeat.status === -1) {
                 this.pushMonitor.showPushExamples = true;
@@ -432,11 +449,9 @@ export default {
             this.loadPushExample();
         }
     },
-
     beforeUnmount() {
         this.$root.emitter.off("newImportantHeartbeat", this.onNewImportantHeartbeat);
     },
-
     methods: {
         getResBaseURL,
         /**
@@ -656,6 +671,30 @@ export default {
                     .replace("https://example.com/api/push/key?status=up&msg=OK&ping=", this.pushURL);
                 this.pushMonitor.code = code;
             });
+        },
+
+        getUptimeForRange() {
+            if (this.selectedDateRange && this.selectedDateRange[0] && this.selectedDateRange[1]) {
+                this.$root.getSocket().emit("getUptimeForRange", this.monitor.id, this.selectedDateRange[0], this.selectedDateRange[1], (res) => {
+                    if (res.ok) {
+                        this.selectedRangeUptime = res.uptime;
+                    } else {
+                        this.selectedRangeUptime = null;
+                    }
+                });
+            } else {
+                // Default to today if no range is selected
+                const today = new Date();
+                const start = new Date(today.setHours(0,0,0,0)).toISOString();
+                const end = new Date(today.setHours(23,59,59,999)).toISOString();
+                this.$root.getSocket().emit("getUptimeForRange", this.monitor.id, start, end, (res) => {
+                    if (res.ok) {
+                        this.selectedRangeUptime = res.uptime;
+                    } else {
+                        this.selectedRangeUptime = null;
+                    }
+                });
+            }
         }
     },
 };
