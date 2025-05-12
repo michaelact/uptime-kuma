@@ -1320,6 +1320,7 @@ let needSetup = false;
                 console.log("Checking uptime for range:", uptimePercentage);
                 callback({
                     ok: true,
+                    msg: "successRetrievedUptimeRange",
                     uptime: uptimePercentage.toFixed(2)
                 });
             } catch (e) {

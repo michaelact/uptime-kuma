@@ -163,7 +163,17 @@
                     <div class="col-12 col-sm col row d-flex align-items-center d-sm-block">
                         <h4 class="col-4 col-sm-12">{{ $t("Uptime") }}</h4>
                         <p class="col-4 col-sm-12 mb-0 mb-sm-2">
-                            <VueDatePicker v-model="selectedDateRange" range :placeholder="$t('Select date range')" />
+                            <VueDatePicker
+                                v-model="selectedDateRange"
+                                range
+                                :placeholder="new Date()"
+                                :enable-time-picker="true"
+                                :auto-apply="false"
+                                :min-date="new Date(2020, 0, 1)"
+                                :max-date="new Date()"
+                                :default-date="new Date()"
+                                :required="true"
+                            />
                         </p>
                         <span class="col-4 col-sm-12 num">
                              {{ selectedRangeUptime !== null ? selectedRangeUptime + '%' : 'N/A' }}
@@ -677,6 +687,16 @@ export default {
         getUptimeForRange() {
             if (this.selectedDateRange && this.selectedDateRange[0] && this.selectedDateRange[1]) {
                 this.$root.getSocket().emit("getUptimeForRange", this.monitor.id, this.selectedDateRange[0], this.selectedDateRange[1], (res) => {
+                    if (res.ok) {
+                        this.selectedRangeUptime = res.uptime;
+                    } else {
+                        this.selectedRangeUptime = null;
+                    }
+                });
+            } else if (this.selectedDateRange && this.selectedDateRange[0]) {
+                const endOfDay = new Date(this.selectedDateRange[0]);
+                endOfDay.setUTCHours(23, 59, 59, 999);
+                this.$root.getSocket().emit("getUptimeForRange", this.monitor.id, this.selectedDateRange[0], endOfDay.toISOString(), (res) => {
                     if (res.ok) {
                         this.selectedRangeUptime = res.uptime;
                     } else {
