@@ -1300,13 +1300,13 @@ let needSetup = false;
         socket.on("getUptimeForRange", async (monitorID, startDate, endDate, callback) => {
             try {
                 checkLogin(socket);
-
-                // Query heartbeats within the date range
-                console.log("Querying heartbeats for range:", startDate, endDate);
+                const start = dayjs(startDate).utc().format("YYYY-MM-DD HH:mm:ss.SSS");
+                const end = dayjs(endDate).utc().format("YYYY-MM-DD HH:mm:ss.SSS");
+                console.log("Querying heartbeats for range:", start, end);
                 let heartbeats = await R.find("heartbeat", "monitor_id = ? AND time >= ? AND time <= ?", [
                     monitorID,
-                    startDate,
-                    endDate
+                    start,
+                    end
                 ]);
 
                 let totalHeartbeats = heartbeats.length;

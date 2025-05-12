@@ -306,6 +306,7 @@ import "vue-prism-editor/dist/prismeditor.min.css";
 import ScreenshotDialog from "../components/ScreenshotDialog.vue";
 import VueDatePicker from '@vuepic/vue-datepicker';
 import '@vuepic/vue-datepicker/dist/main.css'
+import dayjs from "dayjs";
 
 export default {
     components: {
@@ -683,10 +684,11 @@ export default {
                     }
                 });
             } else {
-                // Default to today if no range is selected
+                // Default to today in UTC
                 const today = new Date();
-                const start = new Date(today.setHours(0,0,0,0)).toISOString();
-                const end = new Date(today.setHours(23,59,59,999)).toISOString();
+                const start = new Date(Date.UTC(today.getUTCFullYear(), today.getUTCMonth(), today.getUTCDate(), 0, 0, 0, 0)).toISOString();
+                const end = new Date(Date.UTC(today.getUTCFullYear(), today.getUTCMonth(), today.getUTCDate(), 23, 59, 59, 999)).toISOString();
+
                 this.$root.getSocket().emit("getUptimeForRange", this.monitor.id, start, end, (res) => {
                     if (res.ok) {
                         this.selectedRangeUptime = res.uptime;
